@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<head>
+	<title>
+	Wakada
+	</title>
+
+	<meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+<!-- Material design 
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.indigo-pink.min.css">
+<script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+-->
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.2.1/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyCQOKSbXtQYS0Vm_6XN_9XOyHU1CoTtxjo",
+    authDomain: "wakada-7e9d6.firebaseapp.com",
+    databaseURL: "https://wakada-7e9d6.firebaseio.com",
+    storageBucket: "wakada-7e9d6.appspot.com",
+  };
+  firebase.initializeApp(config);
+</script>
+
+  <script type="text/javascript">
+  	
+  	$(document).ready(function(){
+
+  		function validForm(){
+  			if($('#start').val().length!==0 && $('#end').val().length!==0 && $('#fare').val().length!==0)
+  				return true;
+  			else return false;
+  		}
+
+  		function validSplitForm(){
+  			if($('#split_start_first').val().length!==0 && $('#split_end_first').val().length!==0 && $('#split_fare_first').val().length!==0 && $('#split_fare_second').val().length!==0 && $('#split_start_second').val().length!==0 && $('#split_end_second').val().length!==0)
+  				return true;
+  			else return false;
+  		}
+
+  		// Form Submit
+  		$('#submit').on('click',function(){
+
+  			var text_from = $('#start').val();
+  			var text_to = $('#end').val();
+  			var text_fare = $('#fare').val();
+  			var travelMedium='';
+  			if($('#isBus').prop('checked'))
+  				travelMedium = 'Bus';
+  			else if($('#isTrain').prop('checked'))
+  				travelMedium = 'Train';
+  			else if($('#isCab').prop('checked'))
+  				travelMedium = 'Cab';
+
+  			if($('#isSplit').prop('checked'))
+  			{
+  					var foodAvailable_first='';
+  				if($('#isFood-First').prop('checked'))
+  				foodAvailable_first = 'Yes';
+  				else if($('#noFood-First').prop('checked'))
+  				foodAvailable_first = 'No';
+  				else if($('#noIdea-First').prop('checked'))
+  				foodAvailable_first = "Do Not Know";
+
+  				var foodAvailable_second='';
+  				if($('#isFood-Second').prop('checked'))
+  				foodAvailable_second = 'Yes';
+  				else if($('#noFood-Second').prop('checked'))
+  				foodAvailable_second = 'No';
+  				else if($('#noIdea-Second').prop('checked'))
+  				foodAvailable_second = "Do Not Know";
+
+  				var travelMedium_first='';
+  				if($('#isSplitBus-First').prop('checked'))
+  				travelMedium_first = 'Bus';
+  				else if($('#isSplitTrain-First').prop('checked'))
+  				travelMedium_first = 'Train';
+  				else if($('#isSplitCab-First').prop('checked'))
+  				travelMedium_first = 'Cab';
+
+  				var travelMedium_second='';
+  				if($('#isSplitBus-Second').prop('checked'))
+  				travelMedium_second = 'Bus';
+  				else if($('#isSplitTrain-Second').prop('checked'))
+  				travelMedium_second = 'Train';
+  				else if($('#isSplitCab-Second').prop('checked'))
+  				travelMedium_second = 'Cab';
+
+  				var obj_first = {start : $('#split_start_first').val(),
+					 	end : $('#split_end_first').val(),
+					 	medium : travelMedium_first,
+					 	splitFare : $('#split_fare_first').val(),
+					 	FoodAvailability : foodAvailable_first};
+
+				var obj_second = {start : $('#split_start_second').val(),
+					 	end : $('#split_end_second').val(),
+					 	medium : travelMedium_second,
+					 	splitFare : $('#split_fare_second').val(),
+					 	FoodAvailability : foodAvailable_second};
+
+  				if(travelMedium_first!=='Train')
+				{
+					var roadConditionFirst='';
+  					if($('#isExcellent-First').prop('checked'))
+  					roadConditionFirst = 'Excellent';
+  					else if($('#isGood-First').prop('checked'))
+  					roadConditionFirst = 'Good';
+  					else if($('#isAverage-First').prop('checked'))
+  					roadConditionFirst = "Average";
+  					else if($('#isPoor-First').prop('checked'))
+  					roadConditionFirst = 'Poor';
+  					else if($('#isVeryPoor-First').prop('checked'))
+  					roadConditionFirst = "Very Poor";
+
+					 	obj_first.roadCondition = roadConditionFirst;
+				}
+
+				if(travelMedium_second!=='Train')
+				{
+					var roadConditionSecond='';
+  					if($('#isExcellent-Second').prop('checked'))
+  					roadConditionSecond = 'Excellent';
+  					else if($('#isGood-Second').prop('checked'))
+  					roadConditionSecond = 'Good';
+  					else if($('#isAverage-Second').prop('checked'))
+  					roadConditionSecond = "Average";
+  					else if($('#isPoor-Second').prop('checked'))
+  					roadConditionSecond = 'Poor';
+  					else if($('#isVeryPoor-Second').prop('checked'))
+  					roadConditionSecond = "Very Poor";
+
+					 	obj_second.roadCondition = roadConditionSecond;
+				}
+
+				if(validSplitForm() && validForm())
+				{
+  				firebase.database().ref().push({
+  					journey :{
+					source:text_from,
+					destination:text_to,
+					fare:text_fare
+					 },
+					 splitJourneyFirst : obj_first,
+					 splitJourneySecond : obj_second
+				}).then(function(){alert('Data Submitted');});
+  				}
+  				else
+  				{
+  					alert("Please fill in all of the required fields");
+  				}
+  			}
+  			else
+  			{
+  				
+  				if(validForm()){
+  				firebase.database().ref().push({
+  					journey :{
+					source:text_from,
+					destination:text_to,
+					fare:text_fare,
+					mediumOfTravel : travelMedium
+					 }
+				}).then(function(){alert('Data Submitted');});
+  				}
+  				else
+  				{
+  					alert("Please fill in all of the required fields");
+  				}
+  			}
+
+  			
+  		});
+
+  		// Split Portion Show/Hide
+  		$('#isSplit').change(function(){
+  			if(this.checked)
+  			{
+  		
+  				$('#non_split').hide();
+  				$('#splitOptions').show();
+  				
+  			}
+  			else
+  			{
+  				
+  				$('#non_split').show();
+  				$('#splitOptions').hide();
+  			}
+  		}); 
+
+  		// Train/Other medium Selection For First
+  		$('#isSplitTrain-First').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_first').hide();
+  			}
+  			else
+  			{
+  				$('#road_condition_first').show();
+  			}
+  		});
+  		$('#isSplitBus-First').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_first').show();
+  			}
+  		});
+  		$('#isSplitCab-First').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_first').show();
+  			}
+  		});
+
+  		// Train/Other medium Selection For Second
+  		$('#isSplitTrain-Second').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_second').hide();
+  			}
+  			else
+  			{
+  				$('#road_condition_second').show();
+  			}
+  		});
+  		$('#isSplitBus-Second').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_second').show();
+  			}
+  		});
+  		$('#isSplitCab-Second').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_second').show();
+  			}
+  		});
+
+  		// Train/Other medium Selection For Third
+  		$('#isSplitTrain-Third').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_third').hide();
+  			}
+  			else
+  			{
+  				$('#road_condition_third').show();
+  			}
+  		});
+  		$('#isSplitBus-Third').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_third').show();
+  			}
+  		});
+  		$('#isSplitCab-Third').click(function(){
+  			if(this.checked)
+  			{
+  				$('#road_condition_third').show();
+  			}
+  		});
+
+      
+    //  document.getElementById("pic").addEventListener('change', readURL, false);
+
+      $("#pic").change(function(input){
+        //var input = $("#pic").val();
+        //alert(input.target.files[0].name);
+      var storageRef = firebase.storage().ref();
+      var uploadTask = storageRef.child('images/' + input.target.files[0].name).put(input.target.files[0]);
+      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+  function(snapshot) {
+    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+    var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    console.log('Upload is ' + progress + '% done');
+    switch (snapshot.state) {
+      case firebase.storage.TaskState.PAUSED: // or 'paused'
+        console.log('Upload is paused');
+        break;
+      case firebase.storage.TaskState.RUNNING: // or 'running'
+        console.log('Upload is running');
+        break;
+    }
+  }, function(error) {
+  switch (error.code) {
+    case 'storage/unauthorized':
+      // User doesn't have permission to access the object
+      break;
+
+    case 'storage/canceled':
+      // User canceled the upload
+      break;
+
+    
+
+    case 'storage/unknown':
+      // Unknown error occurred, inspect error.serverResponse
+      break;
+  }
+}, function() {
+  // Upload completed successfully, now we can get the download URL
+  var downloadURL = uploadTask.snapshot.downloadURL;
+  var s = '<img src="'+downloadURL+'">';
+
+  //var x = downloadURL.replace('&token','%26token');
+
+  var url = "https://api.havenondemand.com/1/api/sync/ocrdocument/v1?file=@/Users/anuragsharma/Documents/HackIO/Wakada/rest16.gif&apikey=1179bf7d-f521-4a6c-a95d-88551e35956c";
+
+//alert(url);
+  $.getJSON(url,function(data){
+      alert(JSON.stringify(data));
+  });
+});
+
+      });
+
+      
+
+      $('#tweet').on('click',function(){
+        var s = $('#start').val();
+        var e = $('#end').val();
+          var url = 'https://twitter.com/intent/tweet?hashtags=hackinout&related=anu0012&text=' + encodeURIComponent('"' + s + '" ' + e);
+
+          window.open(url);
+      });
+    
+
+  	});
+
+  </script>
+
+<style type="text/css">
+	body{
+		padding: 20px;
+
+	}
+
+	#splitOptions{
+		display: none;
+		padding-top: 20px;
+	}
+
+</style>
+
+
+</head>
+
+<body>
+<div class="container-fluid">
+
+<div class="row text-center">
+<form class="col-sm-4 col-sm-offset-4 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4">
+
+<div class="form-group">
+<input type="text" class="form-control" name="From" placeholder="From" id="start" required>
+</div>
+
+<div class="form-group">
+<input type="text" class="form-control" name="To" placeholder="To" id="end" required>
+</div>
+
+<div class="form-group">
+<input type="number" class="form-control" name="fare" placeholder="Total Fare(Approx)" id="fare" required>
+</div>
+
+<div class="checkbox">
+    <label>
+      <input type="checkbox" id="isSplit"> Split Journey
+    </label>
+ </div>
+ <!-- Non-Split Portion -->
+<div id="non_split">
+ <label>Medium of Travel</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isBus" value="Bus" checked>
+    Bus
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isTrain" value="Train">
+    Train
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isCab" value="Cab">
+    Cab
+  </label>
+</div>
+<input type="file" id="pic">
+
+</div>
+
+
+<button type="button" class="btn btn-primary" id="submit">Submit</button>
+<button type="button" class="btn btn-primary" id="tweet">Tweet</button>
+</form>
+
+</div>
+
+<div class='row text-center' id='splitOptions'>
+<!-- First Split -->
+<div id="split-one">
+<form class="col-sm-4 col-md-4 col-lg-4">
+	<label>Split Journey 1</label>
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="Source" id="split_start_first">
+	</div>
+
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="End" id="split_end_first">
+	</div>
+
+	<label>Medium of Travel</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitBus-First" value="Bus" checked>
+    Bus
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitTrain-First" value="Train">
+    Train
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitCab-First" value="Cab">
+    Cab
+  </label>
+  </div>
+
+  <div class="form-group">
+	<input type="number" class="form-control" name="fare" placeholder="Split Fare(Approx)" id="split_fare_first">
+  </div>
+
+<!-- Road Conditions -->
+<div id="road_condition_first">
+  <label>Condition of Roads</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isExcellent-First" value="Excellent" checked>
+    Excellent
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isGood-First" value="Good">
+    Good
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isAverage-First" value="Average">
+    Average
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isPoor-First" value="Poor">
+    Poor
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isVeryPoor-First" value="VeryPoor">
+    Very Poor
+  </label>
+  </div>
+</div>
+
+<!-- Food Availability -->
+<label>Food Availability</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="food" id="isFood-First" value="YesFood" checked>
+    Yes
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noFood-First" value="NoFood">
+    No
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noIdea-First" value="NoIdea">
+    Don't Know
+  </label>
+  </div>
+</form>
+</div>
+
+<!-- Second Split -->
+<div id="split-two">
+<form class="col-sm-4 col-md-4 col-lg-4">
+<label>Split Journey 2</label>
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="Source" id="split_start_second">
+	</div>
+
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="End" id="split_end_second">
+	</div>
+
+	<label>Medium of Travel</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitBus-Second" value="Bus" checked>
+    Bus
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitTrain-Second" value="Train">
+    Train
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitCab-Second" value="Cab">
+    Cab
+  </label>
+  </div>
+
+  <div class="form-group">
+	<input type="number" class="form-control" name="fare" placeholder="Split Fare(Approx)" id="split_fare_second">
+  </div>
+
+<!-- Road Conditions -->
+<div id="road_condition_second">
+  <label>Condition of Roads</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isExcellent-Second" value="Excellent" checked>
+    Excellent
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isGood-Second" value="Good">
+    Good
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isAverage-Second" value="Average">
+    Average
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isPoor-Second" value="Poor">
+    Poor
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isVeryPoor-Second" value="VeryPoor">
+    Very Poor
+  </label>
+  </div>
+</div>
+
+<!-- Food Availability -->
+<label>Food Availability</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="food" id="isFood-Second" value="YesFood" checked>
+    Yes
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noFood-Second" value="NoFood">
+    No
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noIdea-Second" value="NoIdea">
+    Don't Know
+  </label>
+  </div>
+</form>
+</div>
+
+<!-- Third Split -->
+<div id="split-three">
+<form class="col-sm-4 col-md-4 col-lg-4">
+<label>Split Journey 3</label>
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="Source" id="split_start_third">
+	</div>
+
+	<div class="form-group">
+	<input type="text" class="form-control" placeholder="End" id="split_end_third">
+	</div>
+
+	<label>Medium of Travel</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitBus-Third" value="Bus" checked>
+    Bus
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitTrain-Third" value="Train">
+    Train
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="travel" id="isSplitCab-Third" value="Cab">
+    Cab
+  </label>
+  </div>
+
+  <div class="form-group">
+	<input type="number" class="form-control" name="fare" placeholder="Split Fare(Approx)" id="split_fare_third">
+  </div>
+
+<!-- Road Conditions -->
+<div id="road_condition_third">
+  <label>Condition of Roads</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isExcellent-Third" value="Excellent" checked>
+    Excellent
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isGood-Third" value="Good">
+    Good
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isAverage-Third" value="Average">
+    Average
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isPoor-Third" value="Poor">
+    Poor
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="road_condition" id="isVeryPoor-Third" value="VeryPoor">
+    Very Poor
+  </label>
+  </div>
+</div>
+
+<!-- Food Availability -->
+<label>Food Availability</label>
+ <div class="radio">
+  <label class="radio-inline">
+    <input type="radio" name="food" id="isFood-Third" value="YesFood" checked>
+    Yes
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noFood-Third" value="NoFood">
+    No
+  </label>
+  <label class="radio-inline">
+    <input type="radio" name="food" id="noIdea-Third" value="NoIdea">
+    Don't Know
+  </label>
+  </div>
+</form>
+</div>
+
+</div>
+
+<div class='row text-center' style="padding:10px;››">
+<iframe src="finalmap.html" height='400' width='800'></iframe>
+</div>
+
+</div>
+
+</div>	
+</body>
+</html>
